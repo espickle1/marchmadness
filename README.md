@@ -1,4 +1,18 @@
-## This is the code for making predictions for NCAA tournament (or any tournament for that matter)
+# NCAA tournament prediction code!
+This is the code for making predictions for NCAA tournament (or any tournament for that matter).
+Results are determined through:
+  1. Pull strengths for Teams A and B.
+  2. Get a ratio of teams' strengths.
+  3. Take logarith of the ratio (this will range from negative to positive infinity).
+  4. Create logistic distribution and see the corresponding value (from 0 to 1). This is
+     determines how likely a Team A would beat Team B (I call it cutoff).
+  5. Pull a random value (uniformly distributed from 0 to 1).
+  6. When random value is less than the cutoff, Team A wins. Greater, Team B wins.
+  7. Update winning team's team strength by adding the adjusted factor:
+     new_strength = team_strength + (team_strength_proportion * strength_change_game * team_strength)
+     where team_strength_proportion = abs(strength_norm1 - strength_norm2) / strength_norm1 and
+     strength_change_game = random.uniform(0, parameters.strength_change)
+  8. Change the bracket with the winning team and new team strength.
 
 # Program information
 ncaa_tournament_predictions.py: Python script for the prediction code
