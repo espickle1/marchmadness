@@ -1,11 +1,16 @@
 # %%
 # import libraries
+import os
 import pandas as pd
 import numpy as np
 import random
 
 import torch
 from scipy.stats import logistic, expon
+
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(SCRIPT_DIR, "..", "data")
 
 # %%
 # Define tournament and simulation stats
@@ -152,37 +157,38 @@ def simulate_tournament(team_strengths):
 
 # %%
 # Run the tournament
-# Set tournament parameters
-parameters = TournamentParameters(
-    rounds = [64, 32, 16, 8, 4, 2, 1],
-    strength_change_factor = 0.8,
-    logistics_mu = 0,
-    logistics_sigma = 0.01,
-    tournament_input_path = "/home/azureuser/cloudfiles/code/giggles/team_stats_new.csv",
-    tournament_output_path = "/home/azureuser/cloudfiles/code/giggles/tournament_progression.csv",
-    tournament_output_friendly_path = "/home/azureuser/cloudfiles/code/giggles/tournament_results.csv"
-    )
+if __name__ == "__main__":
+    # Set tournament parameters
+    parameters = TournamentParameters(
+        rounds = [64, 32, 16, 8, 4, 2, 1],
+        strength_change_factor = 0.8,
+        logistics_mu = 0,
+        logistics_sigma = 0.01,
+        tournament_input_path = os.path.join(DATA_DIR, "team_stats_new.csv"),
+        tournament_output_path = os.path.join(DATA_DIR, "tournament_progression.csv"),
+        tournament_output_friendly_path = os.path.join(DATA_DIR, "tournament_results.csv")
+        )
 
-# Load team data and minmax normalize team strengths
-teams = pd.read_csv(parameters.tournament_input_path)
-team_strengths = (teams['Strength'] - teams['Strength'].min()) / (teams['Strength'].max() - teams['Strength'].min())
+    # Load team data and minmax normalize team strengths
+    teams = pd.read_csv(parameters.tournament_input_path)
+    team_strengths = (teams['Strength'] - teams['Strength'].min()) / (teams['Strength'].max() - teams['Strength'].min())
 
-# Simulate the tournament!
-tournament_runs = []
+    # Simulate the tournament!
+    tournament_runs = []
 
-for _ in range(16):
-    # Each run of tournament
-    tournament_progression, champion, champion_name, champion_strength = simulate_tournament(team_strengths)
-    print(f"🏆 The champion is {champion_name} (Team {champion}) with a final strength of {champion_strength:.2f}")
+    for _ in range(16):
+        # Each run of tournament
+        tournament_progression, champion, champion_name, champion_strength = simulate_tournament(team_strengths)
+        print(f"The champion is {champion_name} (Team {champion}) with a final strength of {champion_strength:.2f}")
 
-    # Convert tournament dataframe to NumPy and then to Tensor
-    results_array = pd.concat(tournament_progression).to_numpy(dtype=np.float32)
-    results_tensor = torch.tensor(results_array)
-    tournament_runs.append(results_tensor)
+        # Convert tournament dataframe to NumPy and then to Tensor
+        results_array = pd.concat(tournament_progression).to_numpy(dtype=np.float32)
+        results_tensor = torch.tensor(results_array)
+        tournament_runs.append(results_tensor)
 
-# Stack all tensors into a single tensor and save tensor
-tournament_tensor = torch.stack(tournament_runs)
-output_tensor_path = "/home/azureuser/cloudfiles/code/giggles/tournament_tensor.pt"
-torch.save(tournament_tensor, output_tensor_path)
+    # Stack all tensors into a single tensor and save tensor
+    tournament_tensor = torch.stack(tournament_runs)
+    output_tensor_path = os.path.join(DATA_DIR, "tournament_tensor.pt")
+    torch.save(tournament_tensor, output_tensor_path)
 
-
+    print(f"\nResults saved to: {DATA_DIR}")
